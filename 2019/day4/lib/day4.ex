@@ -1,11 +1,12 @@
 defmodule Day4 do
   @moduledoc """
   Advent of Code 2019 - Day 4
+  Secure Container
   """
 
   def input do
-    val = "138241-674034"
-    apply(Range, :new, String.split(val, "-") |> Enum.map(&String.to_integer/1))
+    {:ok, val} = File.read("dat/prod")
+    apply(Range, :new, String.split(val |> String.trim, "-") |> Enum.map(&String.to_integer/1))
   end
 
   def part1 do
@@ -67,7 +68,7 @@ defmodule Day4 do
       {runs, val, cnt}
     end)
     runs |> Enum.reduce(false, fn run, acc ->
-      {val, cnt} = run
+      {_val, cnt} = run
       acc || cnt == 2
     end)
   end

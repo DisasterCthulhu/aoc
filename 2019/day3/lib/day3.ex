@@ -1,6 +1,7 @@
 defmodule Day3 do
   @moduledoc """
   Advent of Code 2019 - Day 3
+  Crossed Wires
   """
 
   def part1 do

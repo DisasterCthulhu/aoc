@@ -1,6 +1,7 @@
 defmodule Day2 do
   @moduledoc """
-  Documentation for Day2.
+  Advent of Code 2019 - Day 2
+  1202 Program Alarm
   """
 
   def input do

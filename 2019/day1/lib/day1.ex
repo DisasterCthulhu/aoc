@@ -1,6 +1,7 @@
 defmodule Day1 do
   @moduledoc """
-  Documentation for Day1.
+  Advent of Code 2019 - Day 1
+  The Tyranny of the Rocket Equation
   """
 
   def masses do
