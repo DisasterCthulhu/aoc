@@ -11,15 +11,15 @@ defmodule Day4 do
 
   def part1 do
     input()
-    |> Enum.filter(&rule_dupes/1)
     |> Enum.filter(&rule_gte/1)
+    |> Enum.filter(&rule_dupes/1)
     |> Enum.count
   end
 
   def part2 do
     input()
-    |> Enum.filter(&rule_pairs/1)
     |> Enum.filter(&rule_gte/1)
+    |> Enum.filter(&rule_pairs/1)
     |> Enum.count
   end
 
@@ -27,21 +27,10 @@ defmodule Day4 do
     6
   end
 
-  # TODO: which one is faster? disjoint is acceptable with the gte rule
-  def rule_disjoint_dupes(val) do
-    Integer.digits(val)
-    |> MapSet.new
-    |> MapSet.size < rule_length()
-  end
-
   def rule_dupes(val) do
-    {valid, _} = Integer.digits(val)
-    |> Enum.reduce({false, -1}, fn val, acc ->
-      {valid, carry} = acc
-      valid = valid || val == carry
-      {valid, val}
-    end)
-    valid
+    Integer.digits(val)
+    |> Enum.dedup
+    |> Enum.count < rule_length()
   end
 
   def rule_pairs(val) do
