@@ -50,21 +50,11 @@ defmodule Day4 do
     |> Enum.reduce({[], -1, 0}, fn val_idx, acc ->
       {val, idx} = val_idx
       {runs, prev, cnt} = acc
-      runs = if cnt > 0 && prev != val do
-        runs ++ [{prev, cnt}]
-      else
-        runs
-      end
-      cnt = if prev == val do
-        cnt + 1
-      else
-        1
-      end
-      runs = if idx == rule_length() - 1 do
-        runs ++ [{val, cnt}]
-      else
-        runs
-      end
+      # Save previous run on change
+      runs = runs ++ if cnt > 0 && prev != val, do: [{prev, cnt}], else: []
+      cnt = if prev == val, do: cnt + 1, else: 1
+      # Save final run
+      runs = runs ++ if idx == rule_length() - 1, do: [{val, cnt}], else: []
       {runs, val, cnt}
     end)
     runs |> Enum.reduce(false, fn run, acc ->
