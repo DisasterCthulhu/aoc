@@ -1,4 +1,8 @@
 defmodule Day4 do
+  @moduledoc """
+  Advent of Code 2019 - Day 4
+  """
+
   def input do
     val = "138241-674034"
     apply(Range, :new, String.split(val, "-") |> Enum.map(&String.to_integer/1))
@@ -17,7 +21,7 @@ defmodule Day4 do
     |> Enum.filter(&rule_gte/1)
     |> Enum.count
   end
-  
+
   def rule_length do
     6
   end
@@ -55,7 +59,7 @@ defmodule Day4 do
       else
         1
       end
-      runs = if idx == rule_length() - 1 do 
+      runs = if idx == rule_length() - 1 do
         runs ++ [{val, cnt}]
       else
         runs

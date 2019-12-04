@@ -12,15 +12,15 @@ defmodule Day2Test do
   test "prog(input)[0] == 19690720" do
     raw = Day2.input()
     [verb, noun] = Enum.reduce(0..99, -1,
-      fn x, accx -> 
+      fn x, accx ->
         if accx == -1 do
           Enum.reduce(0..99, -1,
-            fn y, accy -> 
+            fn y, accy ->
               i = List.replace_at(raw, 1, x)
               i = List.replace_at(i, 2, y)
               cond do
                 accy != -1 -> accy
-                List.first(Day2.prog(i) |> String.split(",")) == "19690720" -> 
+                List.first(Day2.prog(i) |> String.split(",")) == "19690720" ->
                   IO.puts(Enum.join(["Part 2 is", x, y], ","))
                   [x, y]
                 true -> accx
