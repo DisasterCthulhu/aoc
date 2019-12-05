@@ -107,11 +107,7 @@ defmodule Day3 do
     Enum.reduce(intersections, 9999, fn ins, acc ->
       {x, y} = ins
       test = mdist(0, [x, y])
-      acc = if test < acc do
-        test
-      else
-        acc
-      end
+      if test < acc, do: test, else: acc
     end)
   end
 end

@@ -2,10 +2,6 @@ defmodule Day1Test do
   use ExUnit.Case
   doctest Day1
 
-  test "greets the world" do
-    assert Day1.hello() == :world
-  end
-
   test "rocket fuel required for masses" do
     assert Day1.naive_fuel(12) == 2
     assert Day1.naive_fuel(14) == 2
