@@ -8,9 +8,8 @@ defmodule Intcode do
     str |> String.trim |> String.split(",") |> Enum.map(&String.to_integer/1)
   end
 
-
   def read_args(args, state) do
-    {mem, stack_ptr, io_in, io_out} = state
+    {mem, stack_ptr, _io_in, _io_out} = state
     modes = op_modes(state)
     Enum.map(args, fn arg_pos ->
       ref = Enum.at(mem, stack_ptr + arg_pos)
@@ -20,9 +19,8 @@ defmodule Intcode do
   end
 
   def op_modes(state) do
-    {mem, stack_ptr, io_in, io_out} = state
-    op = Enum.at(mem, stack_ptr)
-    modes = op
+    {mem, stack_ptr, _io_in, _io_out} = state
+    Enum.at(mem, stack_ptr)
     |> Integer.digits
     |> Enum.reverse
     |> Enum.drop(2)
@@ -57,9 +55,8 @@ defmodule Intcode do
   end
 
   def cout(state) do
-    {mem, stack_ptr, io_in, io_out} = state
+    {mem, stack_ptr, io_in, _io_out} = state
     {val} = params(1, state)
-    IO.puts("cout <<" <> inspect(val))
     {mem, stack_ptr + 2, io_in, val}
   end
 
@@ -69,12 +66,14 @@ defmodule Intcode do
     far = if test != 0, do: far, else: stack_ptr + 3
     {mem, far, io_in, io_out}
   end
+
   def jumpfalse(state) do
     {mem, stack_ptr, io_in, io_out} = state
     {test, far} = params(2, state)
     far = if test == 0, do: far, else: stack_ptr + 3
     {mem, far, io_in, io_out}
   end
+
   def cmpl(state) do
     {mem, stack_ptr, io_in, io_out} = state
     {lval, rval} = params(2, state)
@@ -83,6 +82,7 @@ defmodule Intcode do
     mem = List.replace_at(mem, store_ptr, sval)
     {mem, stack_ptr + 4, io_in, io_out}
   end
+
   def cmpeql(state) do
     {mem, stack_ptr, io_in, io_out} = state
     {lval, rval} = params(2, state)
@@ -92,10 +92,14 @@ defmodule Intcode do
     {mem, stack_ptr + 4, io_in, io_out}
   end
 
+  def opcode(state) do
+    {mem, stack_ptr, _io_in, _io_out} = state
+    rem(Enum.at(mem, stack_ptr), 100)
+  end
+
   def tick(_step, state) do
-    {mem, stack_ptr, io_in, io_out} = state
-    op = rem(Enum.at(mem, stack_ptr), 100)
-    state = cond do
+    op = opcode(state)
+    cond do
       op == 1 -> {:cont, add(state)}
       op == 2 -> {:cont, mul(state)}
       op == 3 -> {:cont, cin(state)}
@@ -106,24 +110,22 @@ defmodule Intcode do
       op == 8 -> {:cont, cmpeql(state)}
       op == 99 -> {:halt, state}
     end
-    state
   end
 
   def prog(code), do: prog(code, nil)
-
   def prog(code, io_in) do
     mem = code |> parse()
     state = {mem, 0, io_in, []}
-    state = Enum.reduce_while(1..1_000, state, fn step, acc -> tick(step, acc) end)
+    Enum.reduce_while(1..1_000, state, fn step, acc -> tick(step, acc) end)
   end
 
   def state_mem(state) do
-    {mem, stack_ptr, io_in, io_out} = state
+    {mem, _stack_ptr, _io_in, _io_out} = state
     mem |> Enum.join(",")
   end
 
   def state_io_out(state) do
-    {mem, stack_ptr, io_in, io_out} = state
+    {_mem, _stack_ptr, _io_in, io_out} = state
     io_out
   end
 end
