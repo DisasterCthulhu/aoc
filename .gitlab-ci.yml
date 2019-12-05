@@ -9,6 +9,10 @@ day_1:
     - cd 2019/day1
     - mix deps.get --only-test
     - mix test --cover
+  artifacts:
+    paths:
+      - 2019/day1/coverage
+    expire_in: 1 week
 
 day_2:
   stage: test
@@ -17,6 +21,10 @@ day_2:
     - mix local.hex --force
     - mix deps.get --only-test
     - mix test --cover
+  artifacts:
+    paths:
+      - 2019/day2/coverage
+    expire_in: 1 week
 
 day_3:
   stage: test
@@ -25,6 +33,10 @@ day_3:
     - mix local.hex --force
     - mix deps.get --only-test
     - mix test --cover
+  artifacts:
+    paths:
+      - 2019/day3/coverage
+    expire_in: 1 week
 
 day_4:
   stage: test
@@ -33,6 +45,10 @@ day_4:
     - mix local.hex --force
     - mix deps.get --only-test
     - mix test --cover
+  artifacts:
+    paths:
+      - 2019/day4/coverage
+    expire_in: 1 week
 
 day_5:
   stage: test
@@ -41,3 +57,7 @@ day_5:
     - mix local.hex --force
     - mix deps.get --only-test
     - mix test --cover
+  artifacts:
+    paths:
+      - 2019/day5/coverage
+    expire_in: 1 week
