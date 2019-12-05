@@ -14,6 +14,7 @@ day_2:
   stage: test
   script:
     - cd 2019/day2
+    - mix local.hex --force
     - mix deps.get --only-test
     - mix test --cover
 
@@ -21,6 +22,7 @@ day_3:
   stage: test
   script:
     - cd 2019/day3
+    - mix local.hex --force
     - mix deps.get --only-test
     - mix test --cover
 
@@ -28,6 +30,7 @@ day_4:
   stage: test
   script:
     - cd 2019/day4
+    - mix local.hex --force
     - mix deps.get --only-test
     - mix test --cover
 
@@ -35,5 +38,6 @@ day_5:
   stage: test
   script:
     - cd 2019/day5
+    - mix local.hex --force
     - mix deps.get --only-test
     - mix test --cover
