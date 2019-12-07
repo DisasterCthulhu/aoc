@@ -25,39 +25,24 @@ defmodule Day7 do
       outputs = run(prog, [io_in | outputs]) |> Intcode.state_io_out
       [io_in | tail] = tail
       outputs = run(prog, [io_in | outputs]) |> Intcode.state_io_out
-      [io_in | tail] = tail
-      outputs = run(prog, [io_in | outputs]) |> Intcode.state_io_out
+      [io_in | _tail] = tail
+      run(prog, [io_in | outputs]) |> Intcode.state_io_out
     end)
     |> Enum.max
     |> List.first
   end
 
-  def feedback(n, acc) do
-    {initial, progs} = acc
-    [p | progs] = progs
-    p = Intcode.resume(p, initial)
-    signal = p |> Intcode.state_io_out
-    done = [p]
-    [p | progs] = progs
-    p = Intcode.resume(p, signal)
-    signal = p |> Intcode.state_io_out
-    done = done ++ [p]
-    [p | progs] = progs
-    p = Intcode.resume(p, signal)
-    signal = p |> Intcode.state_io_out
-    done = done ++ [p]
-    [p | progs] = progs
-    p = Intcode.resume(p, signal)
-    signal = p |> Intcode.state_io_out
-    done = done ++ [p]
-    [p | progs] = progs
-    p = Intcode.resume(p, signal)
-    signal = p |> Intcode.state_io_out
-    done = done ++ [p]
+  def feedback(acc) do
+    {signal, progs} = Enum.reduce(0..4, acc, fn i, acc ->
+      {initial, progs} = acc
+      p = Intcode.resume(Enum.at(progs, i), initial)
+      signal = p |> Intcode.state_io_out
+      {signal, List.replace_at(progs, i, p)}
+    end)
     if signal == [] do
-      {:halt, initial}
+      {:halt, acc}
     else
-      {:cont, {signal, done}}
+      {:cont, {signal, progs}}
     end
   end
 
@@ -68,9 +53,8 @@ defmodule Day7 do
       progs = Enum.map(perm, fn n ->
         run(prog, [n])
       end)
-      Enum.reduce_while(1..20, {[0], progs}, fn n, acc ->
-        feedback(n, acc)
-      end)
+      {signal, _} = Enum.reduce_while(1..20, {[0], progs}, fn _, acc -> feedback(acc) end)
+      signal
     end)
     |> Enum.max
     |> List.first
