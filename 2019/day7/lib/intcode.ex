@@ -103,32 +103,34 @@ defmodule Intcode do
     rem(Enum.at(mem, stack_ptr), 100)
   end
 
+  def instruction(1, state), do: {:cont, add(state)}
+  def instruction(2, state), do: {:cont, mul(state)}
+  def instruction(3, state), do: cin(state)
+  def instruction(4, state), do: {:cont, cout(state)}
+  def instruction(5, state), do: {:cont, jumptrue(state)}
+  def instruction(6, state), do: {:cont, jumpfalse(state)}
+  def instruction(7, state), do: {:cont, cmpl(state)}
+  def instruction(8, state), do: {:cont, cmpeql(state)}
+  def instruction(99, state), do: {:halt, state}
+
   def tick(_step, state) do
     op = opcode(state)
-    cond do
-      op == 1 -> {:cont, add(state)}
-      op == 2 -> {:cont, mul(state)}
-      op == 3 -> cin(state)
-      op == 4 -> {:cont, cout(state)}
-      op == 5 -> {:cont, jumptrue(state)}
-      op == 6 -> {:cont, jumpfalse(state)}
-      op == 7 -> {:cont, cmpl(state)}
-      op == 8 -> {:cont, cmpeql(state)}
-      op == 99 -> {:halt, state}
-    end
+    instruction(op, state)
   end
 
   def resume(state, io_in) do
-    {mem, pos, _io_in, io_out} = state
+    {mem, pos, _io_in, _io_out} = state
     state = {mem, pos, io_in, []}
-    Enum.reduce_while(1..1_000, state, fn step, acc -> tick(step, acc) end)
+    Stream.cycle(0..0)
+    |> Enum.reduce_while(state, fn step, acc -> tick(step, acc) end)
   end
 
   def prog(code), do: prog(code, [])
   def prog(code, io_in) do
     mem = code |> parse()
     state = {mem, 0, io_in, []}
-    Enum.reduce_while(1..1_000, state, fn step, acc -> tick(step, acc) end)
+    Stream.cycle(0..0)
+    |> Enum.reduce_while(state, fn step, acc -> tick(step, acc) end)
   end
 
   def state_mem(state) do
