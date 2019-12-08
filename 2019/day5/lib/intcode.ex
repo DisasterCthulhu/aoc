@@ -1,11 +1,11 @@
 defmodule Intcode do
   @moduledoc """
   Intcode computer
-  Day 5 edition
+  Day 7 edition
   """
 
   def parse(str) do
-    str |> String.trim |> String.split(",") |> Enum.map(&String.to_integer/1)
+    str |> String.trim |> String.split(",", trim: true) |> Enum.map(&String.to_integer/1)
   end
 
   def read_args(args, state) do
@@ -49,15 +49,21 @@ defmodule Intcode do
 
   def cin(state) do
     {mem, stack_ptr, io_in, io_out} = state
-    store_ptr = Enum.at(mem, stack_ptr + 1)
-    mem = List.replace_at(mem, store_ptr, io_in)
-    {mem, stack_ptr + 2, io_in, io_out}
+    if io_in == [] do
+      {:halt, state}
+    else
+      [read | tail] = io_in
+      store_ptr = Enum.at(mem, stack_ptr + 1)
+      mem = List.replace_at(mem, store_ptr, read)
+      {:cont,
+       {mem, stack_ptr + 2, tail, io_out}}
+    end
   end
 
   def cout(state) do
-    {mem, stack_ptr, io_in, _io_out} = state
+    {mem, stack_ptr, io_in, io_out} = state
     {val} = params(1, state)
-    {mem, stack_ptr + 2, io_in, val}
+    {mem, stack_ptr + 2, io_in, io_out ++ [val]}
   end
 
   def jumptrue(state) do
@@ -97,26 +103,34 @@ defmodule Intcode do
     rem(Enum.at(mem, stack_ptr), 100)
   end
 
+  def instruction(1, state), do: {:cont, add(state)}
+  def instruction(2, state), do: {:cont, mul(state)}
+  def instruction(3, state), do: cin(state)
+  def instruction(4, state), do: {:cont, cout(state)}
+  def instruction(5, state), do: {:cont, jumptrue(state)}
+  def instruction(6, state), do: {:cont, jumpfalse(state)}
+  def instruction(7, state), do: {:cont, cmpl(state)}
+  def instruction(8, state), do: {:cont, cmpeql(state)}
+  def instruction(99, state), do: {:halt, state}
+
   def tick(_step, state) do
     op = opcode(state)
-    cond do
-      op == 1 -> {:cont, add(state)}
-      op == 2 -> {:cont, mul(state)}
-      op == 3 -> {:cont, cin(state)}
-      op == 4 -> {:cont, cout(state)}
-      op == 5 -> {:cont, jumptrue(state)}
-      op == 6 -> {:cont, jumpfalse(state)}
-      op == 7 -> {:cont, cmpl(state)}
-      op == 8 -> {:cont, cmpeql(state)}
-      op == 99 -> {:halt, state}
-    end
+    instruction(op, state)
   end
 
-  def prog(code), do: prog(code, nil)
+  def resume(state, io_in) do
+    {mem, pos, _io_in, _io_out} = state
+    state = {mem, pos, io_in, []}
+    Stream.cycle(0..0)
+    |> Enum.reduce_while(state, fn step, acc -> tick(step, acc) end)
+  end
+
+  def prog(code), do: prog(code, [])
   def prog(code, io_in) do
     mem = code |> parse()
     state = {mem, 0, io_in, []}
-    Enum.reduce_while(1..1_000, state, fn step, acc -> tick(step, acc) end)
+    Stream.cycle(0..0)
+    |> Enum.reduce_while(state, fn step, acc -> tick(step, acc) end)
   end
 
   def state_mem(state) do

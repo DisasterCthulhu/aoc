@@ -11,11 +11,11 @@ defmodule Day5 do
 
   def part1 do
     input()
-    |> Intcode.prog(1)
+    |> Intcode.prog([1])
   end
 
   def part2 do
     input()
-    |> Intcode.prog(5)
+    |> Intcode.prog([5])
   end
 end
