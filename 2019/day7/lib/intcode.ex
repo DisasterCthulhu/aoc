@@ -5,24 +5,26 @@ defmodule Intcode do
   """
 
   def parse(str) do
-    str |> String.trim |> String.split(",", trim: true) |> Enum.map(&String.to_integer/1)
+    str |> String.trim() |> String.split(",", trim: true) |> Enum.map(&String.to_integer/1)
   end
 
   def read_args(args, state) do
     {mem, stack_ptr, _io_in, _io_out} = state
     modes = op_modes(state)
+
     Enum.map(args, fn arg_pos ->
       ref = Enum.at(mem, stack_ptr + arg_pos)
       if Enum.at(modes, arg_pos - 1, 0) == 0, do: Enum.at(mem, ref), else: ref
     end)
-    |> List.to_tuple
+    |> List.to_tuple()
   end
 
   def op_modes(state) do
     {mem, stack_ptr, _io_in, _io_out} = state
+
     Enum.at(mem, stack_ptr)
-    |> Integer.digits
-    |> Enum.reverse
+    |> Integer.digits()
+    |> Enum.reverse()
     |> Enum.drop(2)
   end
 
@@ -49,14 +51,14 @@ defmodule Intcode do
 
   def cin(state) do
     {mem, stack_ptr, io_in, io_out} = state
+
     if io_in == [] do
       {:halt, state}
     else
       [read | tail] = io_in
       store_ptr = Enum.at(mem, stack_ptr + 1)
       mem = List.replace_at(mem, store_ptr, read)
-      {:cont,
-       {mem, stack_ptr + 2, tail, io_out}}
+      {:cont, {mem, stack_ptr + 2, tail, io_out}}
     end
   end
 
@@ -118,19 +120,20 @@ defmodule Intcode do
     instruction(op, state)
   end
 
-  def resume(state, io_in) do
+  def run(state, io_in) do
     {mem, pos, _io_in, _io_out} = state
     state = {mem, pos, io_in, []}
+
     Stream.cycle(0..0)
     |> Enum.reduce_while(state, fn step, acc -> tick(step, acc) end)
   end
 
   def prog(code), do: prog(code, [])
+
   def prog(code, io_in) do
     mem = code |> parse()
-    state = {mem, 0, io_in, []}
-    Stream.cycle(0..0)
-    |> Enum.reduce_while(state, fn step, acc -> tick(step, acc) end)
+    state = {mem, 0, [], []}
+    run(state, io_in)
   end
 
   def state_mem(state) do
