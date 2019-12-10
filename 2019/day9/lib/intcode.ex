@@ -173,7 +173,7 @@ defmodule Intcode do
 
   def state_mem(state) do
     {mem, _stack_ptr, _rb, _io_in, _io_out} = state
-    mem |> Enum.join(",")
+    mem |> Tuple.to_list() |> Enum.join(",")
   end
 
   def state_io_out(state) do
