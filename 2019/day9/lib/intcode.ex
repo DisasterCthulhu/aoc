@@ -1,25 +1,36 @@
 defmodule Intcode do
   @moduledoc """
   Intcode computer
-  Day 7 edition
+  Day 9 edition
   """
+
+  def stack_ptr(state), do: elem(state, 1)
+
+  def stack_ptr(state, delta) do
+    put_elem(state, 1, elem(state, 1) + delta)
+  end
+
+  def stack_ptr(state, :jump, offset), do: put_elem(state, 1, offset)
+
+  def memory(state, pos, val), do: put_elem(state, 0, put_elem(memory(state), pos, val))
+  def memory(state), do: elem(state, 0)
 
   def parse(str) do
     str |> String.trim() |> String.split(",", trim: true) |> Enum.map(&String.to_integer/1)
   end
 
-  def read_arg(0, false, ref, mem, _base), do: Enum.at(mem, ref)
+  def read_arg(0, false, ref, mem, _base), do: elem(mem, ref)
   def read_arg(0, true, ref, _mem, _base), do: ref
   def read_arg(1, _write, ref, _mem, _base), do: ref
   def read_arg(2, true, ref, _mem, relative_base), do: ref + relative_base
-  def read_arg(2, false, ref, mem, relative_base), do: Enum.at(mem, ref + relative_base)
+  def read_arg(2, false, ref, mem, relative_base), do: elem(mem, ref + relative_base)
 
   def read_args(args, state, write) do
-    {mem, stack_ptr, relative_base, _io_in, _io_out} = state
+    {mem, ptr, relative_base, _io_in, _io_out} = state
     modes = op_modes(state)
 
     Enum.map(args, fn arg_pos ->
-      ref = Enum.at(mem, stack_ptr + arg_pos)
+      ref = elem(mem, ptr + arg_pos)
       mode = Enum.at(modes, arg_pos - 1, 0)
       read_arg(mode, write == arg_pos, ref, mem, relative_base)
     end)
@@ -27,9 +38,9 @@ defmodule Intcode do
   end
 
   def op_modes(state) do
-    {mem, stack_ptr, _rb, _io_in, _io_out} = state
+    {mem, _stack_ptr, _rb, _io_in, _io_out} = state
 
-    Enum.at(mem, stack_ptr)
+    elem(mem, stack_ptr(state))
     |> Integer.digits()
     |> Enum.reverse()
     |> Enum.drop(2)
@@ -43,17 +54,19 @@ defmodule Intcode do
   end
 
   def add(state) do
-    {mem, stack_ptr, rb, io_in, io_out} = state
     {lval, rval, sptr} = params(3, state, 3)
-    mem = List.replace_at(mem, sptr, lval + rval)
-    {mem, stack_ptr + 4, rb, io_in, io_out}
+
+    state
+    |> memory(sptr, lval + rval)
+    |> stack_ptr(4)
   end
 
   def mul(state) do
-    {mem, stack_ptr, rb, io_in, io_out} = state
     {lval, rval, sptr} = params(3, state, 3)
-    mem = List.replace_at(mem, sptr, lval * rval)
-    {mem, stack_ptr + 4, rb, io_in, io_out}
+
+    state
+    |> memory(sptr, lval * rval)
+    |> stack_ptr(4)
   end
 
   def cin(state) do
@@ -64,7 +77,7 @@ defmodule Intcode do
     else
       [read | tail] = io_in
       {pos} = params(1, state, 1)
-      mem = List.replace_at(mem, pos, read)
+      mem = put_elem(mem, pos, read)
       {:cont, {mem, stack_ptr + 2, relative_base, tail, io_out}}
     end
   end
@@ -76,33 +89,41 @@ defmodule Intcode do
   end
 
   def jumptrue(state) do
-    {mem, stack_ptr, rb, io_in, io_out} = state
     {test, far} = params(2, state)
-    far = if test != 0, do: far, else: stack_ptr + 3
-    {mem, far, rb, io_in, io_out}
+
+    if test != 0 do
+      state |> stack_ptr(:jump, far)
+    else
+      state |> stack_ptr(3)
+    end
   end
 
   def jumpfalse(state) do
-    {mem, stack_ptr, rb, io_in, io_out} = state
     {test, far} = params(2, state)
-    far = if test == 0, do: far, else: stack_ptr + 3
-    {mem, far, rb, io_in, io_out}
+
+    if test == 0 do
+      state |> stack_ptr(:jump, far)
+    else
+      state |> stack_ptr(3)
+    end
   end
 
   def cmpl(state) do
-    {mem, stack_ptr, rb, io_in, io_out} = state
     {lval, rval, sptr} = params(3, state, 3)
     sval = if lval < rval, do: 1, else: 0
-    mem = List.replace_at(mem, sptr, sval)
-    {mem, stack_ptr + 4, rb, io_in, io_out}
+
+    state
+    |> memory(sptr, sval)
+    |> stack_ptr(4)
   end
 
   def cmpeql(state) do
-    {mem, stack_ptr, rb, io_in, io_out} = state
     {lval, rval, sptr} = params(3, state, 3)
     sval = if lval == rval, do: 1, else: 0
-    mem = List.replace_at(mem, sptr, sval)
-    {mem, stack_ptr + 4, rb, io_in, io_out}
+
+    state
+    |> memory(sptr, sval)
+    |> stack_ptr(4)
   end
 
   def relative_mode(state) do
@@ -113,7 +134,7 @@ defmodule Intcode do
 
   def opcode(state) do
     {mem, stack_ptr, _rb, _io_in, _io_out} = state
-    rem(Enum.at(mem, stack_ptr), 100)
+    rem(elem(mem, stack_ptr), 100)
   end
 
   def instruction(1, state), do: {:cont, add(state)}
@@ -142,8 +163,10 @@ defmodule Intcode do
   def prog(code), do: prog(code, [])
 
   def prog(code, io_in) do
-    mem = code |> parse()
-    mem = mem ++ Enum.map(1..10_000, fn _ -> 0 end)
+    mem =
+      (parse(code) ++ Enum.map(1..2_000, fn _ -> 0 end))
+      |> List.to_tuple()
+
     state = {mem, 0, 0, [], []}
     run(state, io_in)
   end
