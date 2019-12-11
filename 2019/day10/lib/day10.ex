@@ -20,7 +20,7 @@ defmodule Day10 do
       row
       |> String.codepoints()
       |> Stream.with_index()
-      |> MapSet.new(fn {col, x} -> space_object(col, x, y) end)
+      |> Stream.map(fn {col, x} -> space_object(col, x, y) end)
       |> Stream.filter(fn map -> map end)
     end)
     |> Enum.into(%{})
@@ -31,9 +31,9 @@ defmodule Day10 do
 
   def process(asteroids) do
     asteroids
-    |> MapSet.new(fn {base, _} ->
+    |> Map.new(fn {base, _} ->
       {base,
-       MapSet.new(Map.delete(asteroids, base), fn {other, _} ->
+       Enum.map(Map.delete(asteroids, base), fn {other, _} ->
          asteroid_relation(base, other)
        end)}
     end)
@@ -68,23 +68,52 @@ defmodule Day10 do
       {{y, x},
        v
        |> Enum.reduce(%{}, fn {{y, x}, %{atan2: atan2, dist: dist}}, acc ->
-         p = acc[atan2]
-         if !p || dist < elem(p, 2), do: Map.put(acc, atan2, {y, x, dist}), else: acc
+         prev = acc[atan2]
+
+         cond do
+           !prev -> Map.put(acc, atan2, [{y, x, dist}])
+           dist < elem(hd(prev), 2) -> Map.put(acc, atan2, [{y, x, dist} | prev])
+           true -> Map.put(acc, atan2, prev ++ [{y, x, dist}])
+         end
        end)}
     end)
+  end
+
+  def find_nth({targets, nth}), do: find_nth(targets, nth)
+
+  def find_nth(targets, nth) do
+    result =
+      Enum.reduce_while(targets, {%{}, nth}, fn {atan, lst}, acc ->
+        {map, nth} = acc
+        nth = nth - 1
+        lst = lst |> Enum.sort_by(fn {_y, _x, dist} -> dist end)
+
+        if nth == 0 do
+          {:halt, hd(lst)}
+        else
+          lst = tl(lst)
+          map = if lst == [], do: Map.delete(map, atan), else: Map.put(map, atan, lst)
+          {:cont, {map, nth}}
+        end
+      end)
+
+    if tuple_size(result) == 2 && map_size(elem(result, 0)) > 0,
+      do: find_nth(result),
+      else: result
   end
 
   def part2("prod"), do: part2("prod", 200)
   def part2("sample1"), do: part2("sample1", 5)
 
   def part2(file, nth) do
-    {_atan2, {y, x, _dist}} =
+    targets =
       input(file)
       |> visible()
       |> maximize
       |> elem(1)
-      |> Enum.sort_by(fn {atan, {_y, _x, _dist}} -> atan end)
-      |> Enum.at(nth - 1)
+      |> Enum.sort_by(fn {atan2, _lst} -> atan2 end)
+
+    {y, x, _dist} = find_nth(targets, nth)
 
     100 * x + y
   end
