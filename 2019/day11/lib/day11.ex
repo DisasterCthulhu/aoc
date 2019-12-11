@@ -26,7 +26,6 @@ defmodule Day11 do
   def face('W', 0), do: 'S'
   def face('W', 1), do: 'N'
 
-  # Y, X
   def move('N', {y, x}), do: {y - 1, x}
   def move('E', {y, x}), do: {y, x + 1}
   def move('S', {y, x}), do: {y + 1, x}
@@ -37,15 +36,12 @@ defmodule Day11 do
 
   def robot(state, pos, nesw, board) do
     state = Intcode.run(state, [Map.get(board, pos, 0)])
-
     resp = state |> Intcode.state_io_out()
 
     if Enum.count(resp) == 2 do
       [color, turn] = resp
-      board = Map.put(board, pos, color)
       nesw = face(nesw, turn)
-      pos = move(nesw, pos)
-      robot(state, pos, nesw, board)
+      robot(state, move(nesw, pos), nesw, Map.put(board, pos, color))
     else
       board
     end
@@ -53,11 +49,12 @@ defmodule Day11 do
 
   def char(1), do: "#"
   def char(0), do: "."
+  def char(-1), do: " "
 
   def render(img) do
     Enum.map(0..6, fn y ->
       Enum.map(0..50, fn x ->
-        char(Map.get(img, {y, x}, 0))
+        char(Map.get(img, {y, x}, -1))
       end)
     end)
     |> Enum.join("\n")
