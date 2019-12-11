@@ -109,3 +109,27 @@ day_9:
     paths:
       - 2019/day9/cover
     expire_in: 1 week
+
+day_10:
+  stage: test
+  script:
+    - cd 2019/day10
+    - mix local.hex --force
+    - mix deps.get --only-test
+    - mix test --cover
+  artifacts:
+    paths:
+      - 2019/day10/cover
+    expire_in: 1 week
+
+day_11:
+  stage: test
+  script:
+    - cd 2019/day11
+    - mix local.hex --force
+    - mix deps.get --only-test
+    - mix test --cover
+  artifacts:
+    paths:
+      - 2019/day11/cover
+    expire_in: 1 week
