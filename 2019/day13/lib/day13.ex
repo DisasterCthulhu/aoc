@@ -1,6 +1,6 @@
 defmodule Day13 do
   @moduledoc """
-  Documentation for Day13.
+  Advent of Code -- Day 13: Care Package
   """
 
   def input(file) do
@@ -29,15 +29,9 @@ defmodule Day13 do
       |> String.replace("1", "2", global: false)
       |> Intcode.prog([0])
 
-    if display do
-      Stream.interval(1) |> robot(state, display)
-    else
-      Stream.cycle(0..0) |> robot(state, display)
-    end
-  end
-
-  def has_blocks(board) do
-    board |> String.codepoints() |> Enum.count(fn x -> x == "%" end) == 0
+    if display,
+      do: Stream.interval(1) |> robot(state, display),
+      else: Stream.cycle(0..0) |> robot(state, display)
   end
 
   def robot(enum, state, display) do
@@ -47,19 +41,18 @@ defmodule Day13 do
       score = Map.get(board, {0, -1})
       ball = Map.get(board, {-1, 0})
       paddle = Map.get(board, {-1, -1})
-      out = board |> render
 
       if display do
-        IO.puts(out)
+        board |> render |> IO.puts()
         IO.puts(inspect(score))
       end
 
-      if has_blocks(out) do
-        {:halt, score}
-      else
+      if has_blocks(board) do
         {_, bx} = ball
         {_, px} = paddle
         {:cont, {Intcode.run(state, [move(px, bx)]), board}}
+      else
+        {:halt, score}
       end
     end)
   end
@@ -82,6 +75,10 @@ defmodule Day13 do
       acc = if c == 4, do: Map.put(acc, {-1, 0}, {y, x}), else: acc
       Map.put(acc, {y, x}, c)
     end)
+  end
+
+  def has_blocks(board) do
+    Map.values(board) |> Enum.any?(fn x -> x == 2 end)
   end
 
   def char(0), do: " "
