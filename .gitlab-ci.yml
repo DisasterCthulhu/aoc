@@ -181,3 +181,15 @@ day_15:
     paths:
       - 2019/day15/cover
     expire_in: 1 week
+
+day_16:
+  stage: test
+  script:
+    - cd 2019/day16
+    - mix local.hex --force
+    - mix deps.get --only-test
+    - mix test --cover
+  artifacts:
+    paths:
+      - 2019/day16/cover
+    expire_in: 1 week
