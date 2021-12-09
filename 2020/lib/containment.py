@@ -1,3 +1,2 @@
-
-def intersection(first, *others):    
+def intersection(first, *others):
     return set(first).intersection(*others)

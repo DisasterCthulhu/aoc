@@ -1,7 +1,9 @@
 from lib import *
 
+
 def datafile():
     return "input/03"
+
 
 def check_slope(data, dy, dx):
     hits = 0
@@ -17,11 +19,13 @@ def check_slope(data, dy, dx):
             hits += 1
     return hits
 
+
 @microbench
 def part1(data):
     dy = 1
     dx = 3
     return check_slope(data, dy, dx)
+
 
 @microbench
 def part2(data):
